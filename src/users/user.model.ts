@@ -33,5 +33,5 @@ export class User extends Model<User> {
     type: DataType.STRING(255),
     allowNull: true, // Allowed null because it's empty until user logs in
   })
-  declare refresh_token: string;
+  declare refresh_token: string | null;
 }

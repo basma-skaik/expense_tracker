@@ -101,4 +101,16 @@ export class AuthService {
 
     return { accessToken, refreshToken };
   }
+
+  async logout(userId: number): Promise<{ message: string }> {
+    const user = await this.usersService.findOneById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    user.refresh_token = null;
+    await user.save();
+
+    return { message: 'Logged out successfully' };
+  }
 }
