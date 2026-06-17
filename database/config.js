@@ -1,7 +1,10 @@
-require('dotenv').config();
-
-// نحدد البيئة الحالية، وإذا لم تكن محددة نعتبر أنها development تلقائياً
+// Tell dotenv exactly which file to read based on the current environment
+const path = require('path');
 const environment = process.env.NODE_ENV || 'development';
+
+require('dotenv').config({
+  path: path.resolve(process.cwd(), `.env.${environment}`),
+});
 
 const dbConfig = {
   username: process.env.DB_USER,

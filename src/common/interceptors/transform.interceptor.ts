@@ -40,7 +40,9 @@ export class TransformInterceptor<T> implements NestInterceptor<Response<T>> {
           // Extract nested user object if it exists (from register logic), otherwise pass data directly
           data:
             data && typeof data === 'object' && 'user' in data
-              ? data.user
+              ? 'accessToken' in data
+                ? data
+                : data.user // إذا كان هناك توكن أرجع الكائن كاملاً، وإلا أرجع اليوزر فقط
               : data,
         };
       }),

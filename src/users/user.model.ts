@@ -14,18 +14,24 @@ export class User extends Model<User> {
     type: DataType.STRING(255),
     allowNull: false,
   })
-  full_name!: string; // We put ! because at first full_name = undefined but I gurantee that I will give it a value later at the runtime.
+  declare full_name: string;
 
   @Column({
     type: DataType.STRING(255),
     allowNull: false,
     unique: true,
   })
-  email!: string;
+  declare email: string;
 
   @Column({
     type: DataType.STRING(255),
     allowNull: false,
   })
-  password!: string;
+  declare password: string;
+
+  @Column({
+    type: DataType.STRING(255),
+    allowNull: true, // Allowed null because it's empty until user logs in
+  })
+  declare refresh_token: string;
 }
