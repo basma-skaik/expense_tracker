@@ -161,24 +161,31 @@ Client (Postman)         ValidationPipe          AuthController           AuthSe
 Protected endpoint. Requires passing the `accessToken` in the authorization headers as a `Bearer <token>` to safely clear and nullify the active database session.
 
 ```text
-Client (Postman)          JwtAuthGuard            JwtStrategy           AuthController          AuthService / DB
-     │                         │                       │                       │                       │
-     │── 1. POST /logout ─────►│                       │                       │                       │
-     │   (Bearer Token Header) │                       │                       │                       │
-     │                         │── 2. Validate Token ─►│                       │                       │
-     │                         │   (If expired: 401)   │                       │                       │
-     │                         │                       │── 3. validate() ─────►│                       │
-     │                         │                       │   (Extract payload)   │                       │
-     │                         │                       │                       │                       │
-     │                         │◄──────────────────────┴── 4. Inject req.user ─│                       │
-     │                         │                                               │                       │
-     │                         │───────────────────────── 5. logout(userId) ──►│                       │
-     │                         │                                               │── 6. findById()       │
-     │                         │                                               │── 7. refresh_token=null
-     │                         │                                               │── 8. user.save() ────►│
-     │                         │◄──────────────────────────────────────────────┴── 9. Success Msg ─────│
-     │◄─ 10. 200 Response ─────┴───────────────────────────────────────────────────────────────────────┘
-        (TransformInterceptor wraps response as { success: true, data: { message: "Logged out..." } })
+Client (Postman)             JwtAuthGuard              JwtStrategy            AuthController            AuthService / DB
+        │                          │                         │                       │                          │
+        │── 1. POST /logout ──────►│                         │                       │                          │
+        │   (Bearer Token Header)  │                         │                       │                          │
+        │                          │── 2. super.canActivate()│                       │                          │
+        │                          │      triggers check ───►│                       │                          │
+        │                          │                         │── 3. validate()       │                          │
+        │                          │                         │   (Returns: {id,email})                          │
+        │                          │                         │                       │                          │
+        │                          │◄── 4. Passes payload ───┘                       │                          │
+        │                          │   to handleRequest()    │                       │                          │
+        │                          │                         │                       │                          │
+        │                          │── 5. Guard returns user │                       │                          │
+        │                          │   & Passport injects    │                       │                          │
+        │                          │   it into req.user      │                       │                          │
+        │                          │                         │                       │                          │
+        │                          │────────────────────── 6. Forwards request ─────►│                          │
+        │                          │                          (with req.user.id)     │── 7. logout(userId)─────►│
+        │                          │                                                 │   (refresh_token=null)   │
+        │                          │                                                 │   (user.save())          │
+        │                          │                                                 │                          │
+        │                          │◄────────────────────────────────────────────────┴── 8. Success Msg ────────│
+        │                          │                                                                            │
+        │◄─ 9. 200 Response ───────┴────────────────────────────────────────────────────────────────────────────┘
+         (TransformInterceptor wraps response as { success: true, data: { message: "Logged out..." } })
 ```
 
 ---
