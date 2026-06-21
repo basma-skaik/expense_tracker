@@ -100,11 +100,86 @@ npm run start:prod
 
 ---
 
-## API Testing Quick Notes
+## API Testing & Request Lifecycle
 
-- **`POST /auth/register`**: Registers a new user. Expects `fullName`, `email`, and `password`.
-- **`POST /auth/login`**: Issues `accessToken` and `refreshToken` upon providing successful credentials.
-- **`POST /auth/logout`**: Protected endpoint. Requires passing the `accessToken` in the authorization headers as a `Bearer <token>` to clear down the active database session.
+This section provides quick usage notes for the developed API endpoints along with their architectural **Request Lifecycle Maps**.
+
+### 1. `POST /auth/register`
+
+Registers a new user. Expects `fullName`, `email`, and `password`.
+
+```text
+Client (Postman)         ValidationPipe          AuthController           AuthService          UsersService / DB
+     │                         │                       │                       │                       │
+     │── 1. POST /register ───►│                       │                       │                       │
+     │   (Name, Email, Pass)   │                       │                       │                       │
+     │                         │── 2. Check DTO ──────►│                       │                       │
+     │                         │   (If fails: 400 Bad) │                       │                       │
+     │                         │                       │── 3. register() ─────►│                       │
+     │                         │                       │                       │── 4. findOneByEmail()►│
+     │                         │                       │                       │  ◄── (If exists: 409) │
+     │                         │                       │                       │                       │
+     │                         │                       │                       │── 5. bcrypt.hash()    │
+     │                         │                       │                       │── 6. create() ───────►│
+     │                         │                       │                       │  ◄── 7. User Saved ───│
+     │                         │                       │◄─ 8. Return User ─────│                       │
+     │◄─ 9. 201 Response ──────┴───────────────────────┴───────────────────────┴───────────────────────┘
+        (TransformInterceptor wraps data with success: true)
+```
+
+---
+
+### 2. `POST /auth/login`
+
+Issues `accessToken` and `refreshToken` upon providing successful credentials.
+
+```text
+Client (Postman)         ValidationPipe          AuthController           AuthService          UsersService / DB
+     │                         │                       │                       │                       │
+     │── 1. POST /login ──────►│                       │                       │                       │
+     │   (Email, Password)     │                       │                       │                       │
+     │                         │── 2. Check DTO ──────►│                       │                       │
+     │                         │   (If fails: 400)     │                       │                       │
+     │                         │                       │── 3. login() ────────►│                       │
+     │                         │                       │                       │── 4. findOneByEmail()►│
+     │                         │                       │                       │  ◄── (If missing: 401)│
+     │                         │                       │                       │                       │
+     │                         │                       │                       │── 5. bcrypt.compare() │
+     │                         │                       │                       │  ◄── (If wrong: 401)  │
+     │                         │                       │                       │                       │
+     │                         │                       │                       │── 6. generateTokens() │
+     │                         │                       │                       │── 7. Save hashed RT ─►│
+     │                         │                       │◄─ 8. Return Tokens ───│                       │
+     │◄─ 9. 200 Response ──────┴───────────────────────┴───────────────────────┴───────────────────────┘
+        (TransformInterceptor wraps tokens inside { success: true, data: {...} })
+```
+
+---
+
+### 3. `POST /auth/logout`
+
+Protected endpoint. Requires passing the `accessToken` in the authorization headers as a `Bearer <token>` to safely clear and nullify the active database session.
+
+```text
+Client (Postman)          JwtAuthGuard            JwtStrategy           AuthController          AuthService / DB
+     │                         │                       │                       │                       │
+     │── 1. POST /logout ─────►│                       │                       │                       │
+     │   (Bearer Token Header) │                       │                       │                       │
+     │                         │── 2. Validate Token ─►│                       │                       │
+     │                         │   (If expired: 401)   │                       │                       │
+     │                         │                       │── 3. validate() ─────►│                       │
+     │                         │                       │   (Extract payload)   │                       │
+     │                         │                       │                       │                       │
+     │                         │◄──────────────────────┴── 4. Inject req.user ─│                       │
+     │                         │                                               │                       │
+     │                         │───────────────────────── 5. logout(userId) ──►│                       │
+     │                         │                                               │── 6. findById()       │
+     │                         │                                               │── 7. refresh_token=null
+     │                         │                                               │── 8. user.save() ────►│
+     │                         │◄──────────────────────────────────────────────┴── 9. Success Msg ─────│
+     │◄─ 10. 200 Response ─────┴───────────────────────────────────────────────────────────────────────┘
+        (TransformInterceptor wraps response as { success: true, data: { message: "Logged out..." } })
+```
 
 ---
 
