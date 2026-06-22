@@ -104,7 +104,7 @@ npm run start:prod
 
 This section provides quick usage notes for the developed API endpoints along with their architectural **Request Lifecycle Maps**.
 
-### 1. `POST /auth/register`
+### 1. `POST expense-tracker/auth/register`
 
 Registers a new user. Expects `fullName`, `email`, and `password`.
 
@@ -129,7 +129,7 @@ Client (Postman)         ValidationPipe          AuthController           AuthSe
 
 ---
 
-### 2. `POST /auth/login`
+### 2. `POST expense-tracker/auth/login`
 
 Issues `accessToken` and `refreshToken` upon providing successful credentials.
 
@@ -156,7 +156,7 @@ Client (Postman)         ValidationPipe          AuthController           AuthSe
 
 ---
 
-### 3. `POST /auth/logout`
+### 3. `POST expense-tracker/auth/logout`
 
 Protected endpoint. Requires passing the `accessToken` in the authorization headers as a `Bearer <token>` to safely clear and nullify the active database session.
 
