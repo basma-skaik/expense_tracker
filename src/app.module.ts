@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { ExpenseTransactionsModule } from './expense-transactions/expense-transactions.module';
 @Module({
   imports: [
     // this line to make sure .env file load globally in the project
@@ -22,6 +23,7 @@ import { AuthModule } from './auth/auth.module';
     }),
     UsersModule,
     AuthModule,
+    ExpenseTransactionsModule,
   ],
 })
 export class AppModule {}
