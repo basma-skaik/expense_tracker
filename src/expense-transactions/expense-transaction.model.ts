@@ -8,9 +8,29 @@ import {
 } from 'sequelize-typescript';
 import { User } from 'src/users/user.model';
 
+interface ExpenseTransactionAttributes {
+  id: number;
+  amount: number;
+  description: string | null;
+  transaction_date: Date;
+  expense_category: string;
+  user_id: number;
+}
+
+interface ExpenseTransactionCreationAttributes {
+  amount: number;
+  description?: string | null;
+  transaction_date: Date;
+  expense_category: string;
+  user_id: number;
+}
+
 // قمنا بتعطيل الـ timestamps لانه ما بلزمنا نعمل كريت ات و ابديت ات
 @Table({ tableName: 'expense_transactions', timestamps: false })
-export class ExpenseTransaction extends Model<ExpenseTransaction> {
+export class ExpenseTransaction extends Model<
+  ExpenseTransactionAttributes,
+  ExpenseTransactionCreationAttributes
+> {
   @Column({
     type: DataType.INTEGER,
     autoIncrement: true,

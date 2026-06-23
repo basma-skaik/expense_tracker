@@ -1,34 +1,50 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  Req,
+} from '@nestjs/common';
 import { ExpenseTransactionsService } from './expense-transactions.service';
 import { CreateExpenseTransactionDto } from './dto/create-expense-transaction.dto';
-import { UpdateExpenseTransactionDto } from './dto/update-expense-transaction.dto';
+// import { UpdateExpenseTransactionDto } from './dto/update-expense-transaction.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @Controller('expense-transactions')
+@UseGuards(JwtAuthGuard)
 export class ExpenseTransactionsController {
-  constructor(private readonly expenseTransactionsService: ExpenseTransactionsService) {}
+  constructor(
+    private readonly expenseTransactionsService: ExpenseTransactionsService,
+  ) {}
 
   @Post()
-  create(@Body() createExpenseTransactionDto: CreateExpenseTransactionDto) {
-    return this.expenseTransactionsService.create(createExpenseTransactionDto);
+  @HttpCode(HttpStatus.CREATED)
+  async create(
+    @Body() createDto: CreateExpenseTransactionDto,
+    @Req() req: any,
+  ) {
+    const userId = req.user.id;
+    return await this.expenseTransactionsService.create(createDto, userId);
   }
 
   @Get()
-  findAll() {
-    return this.expenseTransactionsService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.expenseTransactionsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateExpenseTransactionDto: UpdateExpenseTransactionDto) {
-    return this.expenseTransactionsService.update(+id, updateExpenseTransactionDto);
+  @HttpCode(HttpStatus.OK)
+  async findAll(@Req() req: any) {
+    const userId = req.user.id;
+    return await this.expenseTransactionsService.findAll(userId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.expenseTransactionsService.remove(+id);
+  @HttpCode(HttpStatus.OK)
+  async remove(@Param('id') id: string, @Req() req: any) {
+    const userId = req.user.id;
+    // تحويل الـ id من string إلى number
+    return await this.expenseTransactionsService.remove(+id, userId);
   }
 }

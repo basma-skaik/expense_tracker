@@ -27,6 +27,6 @@ export class UsersService {
     email: string;
     password: string;
   }): Promise<User> {
-    return this.userModel.create(userData as any);
+    return this.userModel.create(userData);
   }
 }
